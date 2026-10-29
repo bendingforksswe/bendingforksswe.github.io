@@ -42,15 +42,7 @@ Workflow `.github/workflows/pubblica.yml`:
 
 ## Configurazione (una volta sola, serve un admin della repo)
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. **Secret `DOCS_TOKEN`**: documenti-swe è privata, quindi l'Action ha bisogno di un token in sola lettura.
-   - github.com → Settings → Developer settings → Personal access tokens → *Fine-grained tokens* → Generate new token;
-   - Resource owner: `bendingforksswe`; Repository access: *Only select repositories* → `documenti-swe`;
-   - Permissions → Repository permissions → **Contents: Read-only** (Metadata: Read-only viene aggiunto da solo);
-   - in questa repo: Settings → Secrets and variables → Actions → New repository secret,
-     nome `DOCS_TOKEN`, valore il token.
-   Se l'organizzazione richiede l'approvazione dei fine-grained token, un owner deve approvarlo in
-   Organization settings → Personal access tokens → Pending requests.
-   Alla scadenza del token l'Action fallisce con un messaggio chiaro: basta rigenerarlo e aggiornare il secret.
+2. Nessun token: documenti-swe è pubblica e l'Action la scarica direttamente.
 
 ## Provare in locale
 Serve Python 3 e una distribuzione LaTeX (TeX Live o MiKTeX). Clona documenti-swe in `documenti/`
