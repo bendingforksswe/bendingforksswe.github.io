@@ -61,14 +61,16 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--accento); outli
   position: sticky; top: 0; z-index: 10; background: var(--testata);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--linea);
 }
-.testata-riga { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-top: 12px; padding-bottom: 12px; }
+.testata-riga { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding-top: 12px; padding-bottom: 12px; }
 .marchio { display: flex; align-items: center; gap: 12px; font-family: var(--titoli); font-weight: 700; font-size: 20px; letter-spacing: .02em; color: var(--testo); }
 .marchio img { width: 40px; height: 40px; display: block; }
 .salti { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .salti a { padding: 10px 16px; border-radius: 999px; font-weight: 500; font-size: 15px; color: var(--testo-2); transition: background .15s, color .15s; }
 .salti a:hover { background: var(--chip); color: var(--testo); }
-.salti a.gh { margin-left: 8px; background: var(--bottone); color: var(--bottone-testo); font-weight: 600; }
-.salti a.gh:hover { filter: brightness(1.08); }
+.salti { margin-left: auto; }
+.azioni { display: flex; align-items: center; gap: 8px; }
+.gh { padding: 10px 16px; border-radius: 999px; font-size: 15px; background: var(--bottone); color: var(--bottone-testo); font-weight: 600; transition: filter .15s; }
+.gh:hover { filter: brightness(1.08); }
 .tema {
   width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%; border: 1px solid var(--linea);
   background: var(--superficie); color: var(--testo); cursor: pointer;
@@ -91,8 +93,7 @@ h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; letter-spacing: .1em; t
 .solleva:hover { transform: translateY(-3px); box-shadow: 0 10px 30px var(--ombra); }
 .badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .badge.prep { background: var(--prep-sfondo); color: var(--prep-testo); }
-.secondario { font-family: inherit; font-size: 13px; color: var(--testo-2); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
-.secondario:hover { color: var(--testo); }
+.badge.firmato { background: var(--ok-sfondo); color: var(--ok-testo); }
 .pdf { padding: 10px 18px; border-radius: 12px; font-weight: 600; font-size: 14px; background: var(--bottone); color: var(--bottone-testo); transition: filter .15s, transform .15s; white-space: nowrap; }
 .pdf:hover { filter: brightness(1.08); transform: translateY(-1px); }
 .meta { font-family: var(--mono); font-size: 13px; color: var(--testo-2); }
@@ -104,16 +105,13 @@ h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; letter-spacing: .1em; t
 .doc h4 { margin: 0; font-family: var(--titoli); font-weight: 600; font-size: 22px; line-height: 1.25; }
 .doc .piede-doc { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
-/* Documenti in preparazione */
-.in-prep { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--testo-2); font-size: 14px; }
-.in-prep .etichetta { font-weight: 600; margin-right: 4px; }
-
 /* Verbali */
 .colonne { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
 .righe { display: flex; flex-direction: column; gap: 12px; }
 .riga { background: var(--superficie); border: 1px solid var(--linea); border-radius: 16px; padding: 16px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
 .riga .testo { flex: 1 1 140px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .riga .titolo { font-weight: 600; font-size: 16px; }
+.azioni-riga { display: flex; align-items: center; gap: 12px; }
 
 /* Vuoto */
 .vuoto { border: 2px dashed var(--linea); border-radius: 20px; padding: 32px; display: flex; align-items: center; gap: 20px; color: var(--testo-2); font-size: 17px; }
@@ -149,10 +147,11 @@ h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; letter-spacing: .1em; t
   .testata-riga { gap: 8px 12px; padding-top: 10px; padding-bottom: 8px; }
   .marchio { font-size: 18px; }
   .marchio img { width: 34px; height: 34px; }
-  .tema { order: 2; width: 38px; height: 38px; flex-basis: 38px; }
-  .salti { order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -4px; }
+  /* su telefono: marchio + GitHub/tema sulla prima riga, sezioni scorrevoli sotto */
+  .azioni { order: 2; margin-left: auto; }
+  .gh { padding: 8px 14px; font-size: 14px; }
+  .tema { width: 38px; height: 38px; flex-basis: 38px; }
+  .salti { order: 3; width: 100%; margin: 0 -4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .salti::-webkit-scrollbar { display: none; }
   .salti a { padding: 7px 12px; white-space: nowrap; }
-  .salti a.gh { display: none; } /* su telefono GitHub resta nel piede */
-  .doc { min-height: 0; padding: 22px; }
 }

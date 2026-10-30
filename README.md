@@ -12,7 +12,7 @@ La cartella in cui sta il file decide dove compare sul sito (maiuscole/minuscole
 
 ```
 verbali/esterni/AAAA-MM-GG_verbale-esterno-<azienda>.tex      -> Verbali esterni
-verbali/esterni/firmati/<stesso nome>-firmato.pdf             -> il bottone del verbale scarica il PDF firmato
+verbali/<esterni|interni>/firmati/<stesso nome>-firmato.pdf  -> il bottone del verbale scarica il PDF firmato
 verbali/interni/AAAA-MM-GG_verbale_interno_<n>_V1.0.tex       -> Verbali interni
 diari-di-bordo/AAAA-MM-GG_....pdf                             -> Diari di bordo
 qualsiasi altro .tex o .pdf                                   -> Documenti
@@ -22,6 +22,8 @@ template/, modelli/, assets/                                  -> ignorate
 - **Data**: dal prefisso `AAAA-MM-GG` del nome file. **Versione**: dalla riga `\textbf{Versione} & x.y.z` in copertina.
 - **Fase** (Candidatura, RTB, PB): da una cartella `candidatura/`, `rtb/` o `pb/` nel percorso, se c'è;
   altrimenti dalla data, confrontata con le scadenze in `sito/assets/js/config.js`.
+- **Firmato**: un verbale è firmato se c'è il PDF in `firmati/`, oppure se il `.tex` include l'immagine di una firma
+  (`\includegraphics{Assets/firma_...}`) per ogni riga "Firma ...". Dei verbali firmati si scarica solo la versione firmata.
 - I `.tex` vuoti vengono saltati; i PDF già pronti vengono copiati così come sono.
 - Le immagini `Assets/<file>` usate nei `.tex` vengono prese dalla cartella `assets/` di documenti-swe.
 - Metadati facoltativi in testa al `.tex`: `%! titolo: Valutazione dei capitolati`, `%! con: Uranion`.

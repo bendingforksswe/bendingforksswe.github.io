@@ -60,14 +60,13 @@
   const linkPdf = (href, titolo) => el("a", { class: "pdf", href, target: "_blank", rel: "noopener",
     "aria-label": titolo ? "Apri PDF: " + titolo : null, text: "PDF" });
 
-  // Bottoni del PDF: se esiste la versione firmata, il bottone principale scarica quella
-  // e la versione non firmata resta come link secondario
+  // Bottoni del PDF: se esiste la versione firmata si offre solo quella, da scaricare direttamente
   function bottoniPdf(d, titolo) {
     if (!d.firmato) return [linkPdf(d.file, titolo)];
     return [
-      el("a", { class: "secondario", href: d.file, target: "_blank", rel: "noopener", text: "non firmato" }),
+      el("span", { class: "badge firmato", text: "firmato" }),
       el("a", { class: "pdf", href: d.firmato, download: d.firmato.split("/").pop(),
-        "aria-label": titolo ? "Scarica PDF firmato: " + titolo : null, text: "PDF firmato" }),
+        "aria-label": titolo ? "Scarica PDF firmato: " + titolo : null, text: "PDF" }),
     ];
   }
 
@@ -87,13 +86,10 @@
   // Verbale o diario come riga
   function riga(titolo, d) {
     const meta = [d.data, d.versione ? "v" + d.versione : ""].filter(Boolean).join(" · ");
-    const sotto = meta ? el("span", { class: "meta", text: meta }) : null;
     const bottoni = d.file ? bottoniPdf(d, titolo) : [el("span", { class: "badge prep", text: "in preparazione" })];
-    // nella riga il link "non firmato" va sotto il titolo, così il bottone resta sulla stessa linea
-    if (bottoni.length > 1 && sotto) sotto.append(" · ", bottoni.shift());
-    const r = el("div", { class: "riga solleva" },
-      el("div", { class: "testo" }, el("span", { class: "titolo", text: titolo }), sotto), ...bottoni);
-    return r;
+    return el("div", { class: "riga solleva" },
+      el("div", { class: "testo" }, el("span", { class: "titolo", text: titolo }), meta ? el("span", { class: "meta", text: meta }) : null),
+      el("div", { class: "azioni-riga" }, ...bottoni));
   }
 
   const vuoto = (testo) => el("div", { class: "vuoto" }, iconaDiario(), el("span", { text: testo }));
@@ -127,12 +123,10 @@
 
     const corpo = [];
     const usati = new Set();
-    const carte = [];
-    const mancanti = [];
-    (f.attesi || []).forEach((a) => {
+    const carte = (f.attesi || []).map((a) => {
       const trovato = docs.filter((d) => piatto(d.nome).includes(piatto(a.nome))).sort(recenti)[0];
-      if (trovato) { usati.add(trovato); carte.push(card(a.titolo, trovato)); }
-      else mancanti.push(a.titolo);
+      if (trovato) usati.add(trovato);
+      return card(a.titolo, trovato || {});
     });
     docs.filter((d) => !usati.has(d)).sort(recenti)
       .forEach((d) => carte.push(card(d.titolo || daNome(d.nome), d)));
@@ -141,10 +135,6 @@
       corpo.push(el("div", { class: "colonne" },
         el("div", { class: "blocco" }, el("h3", { text: "Verbali esterni" }), listaVerbali(est, true)),
         el("div", { class: "blocco" }, el("h3", { text: "Verbali interni" }), listaVerbali(int, false))));
-    }
-    if (mancanti.length) {
-      corpo.push(el("div", { class: "in-prep" }, el("span", { class: "etichetta", text: "In preparazione:" }),
-        ...mancanti.map((t) => el("span", { class: "badge prep", text: t }))));
     }
     const occhiello = "Documenti" + (f.scadenza ? " · consegna " + dataLunga(f.scadenza) : "");
     sezione(f.id, f.titolo, occhiello, ...corpo);
@@ -165,7 +155,9 @@
   sezione("team", "Team", "Le persone", team);
 
   // Link GitHub in testata
-  if (S.gruppo.github) salti.append(el("a", { class: "gh", href: S.gruppo.github, target: "_blank", rel: "noopener", text: "GitHub" }));
+  // (accanto al bottone del tema, fuori dal menu delle sezioni)
+  if (S.gruppo.github) document.getElementById("tema").before(
+    el("a", { class: "gh", href: S.gruppo.github, target: "_blank", rel: "noopener", text: "GitHub" }));
 
   // Bottone chiaro/scuro: parte dalla preferenza di sistema e ricorda la scelta
   const radice = document.documentElement;

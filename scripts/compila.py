@@ -12,7 +12,9 @@ con la variabile d'ambiente DOCUMENTI. Lo script:
 La posizione del file decide dove compare sul sito (maiuscole/minuscole indifferenti):
   verbali/esterni/AAAA-MM-GG_verbale-esterno-<azienda>.tex   -> verbali esterni
   verbali/interni/AAAA-MM-GG_verbale_interno_<n>_V1.0.tex    -> verbali interni
-  verbali/esterni/firmati/<stesso nome>-firmato.pdf          -> link "firmato" accanto al verbale
+  verbali/<esterni|interni>/firmati/<stesso nome>-firmato.pdf -> il bottone del verbale scarica il firmato
+Un .tex che include le immagini delle firme (\\includegraphics{Assets/firma_...}) per ogni riga
+"Firma ..." conta già come firmato.
   diari-di-bordo/AAAA-MM-GG_....pdf                           -> diari di bordo
   qualsiasi altro .tex/.pdf                                   -> documenti
 Le cartelle template/, modelli/ e assets/ vengono ignorate.
@@ -54,6 +56,10 @@ def metadati(tex: Path) -> dict:
         if m:
             meta["versione"] = m.group(1)
     meta["segnaposto"] = len(re.findall(r"\\ph\{", testo))
+    # Firmato se ogni riga "Firma ..." ha l'immagine di una firma (\includegraphics{Assets/firma_...})
+    immagini = len(re.findall(r"\\includegraphics(?:\[[^\]]*\])?\{[^}]*firma[^}]*\}", testo, re.I))
+    spazi = len(re.findall(r"\\textbf\{Firma\b", testo))
+    meta["firme"] = immagini > 0 and immagini >= spazi
     return meta
 
 
@@ -108,8 +114,9 @@ def chiave(rel: Path) -> str:
 def voce(rel: Path, meta: dict) -> dict:
     fase, sezione = classifica(rel)
     m = re.match(r"(\d{4}-\d{2}-\d{2})", rel.stem)
-    return {
-        "file": "pdf/" + rel.with_suffix(".pdf").as_posix(),
+    file = "pdf/" + rel.with_suffix(".pdf").as_posix()
+    v = {
+        "file": file,
         "fase": fase,
         "sezione": sezione,
         "nome": rel.stem,
@@ -118,6 +125,9 @@ def voce(rel: Path, meta: dict) -> dict:
         "versione": meta.get("versione", ""),
         "data": m.group(1) if m else "",
     }
+    if meta.get("firme"):  # le firme sono già nel .tex: il PDF compilato è quello firmato
+        v["firmato"] = file
+    return v
 
 
 def commit_documenti() -> str:
