@@ -60,14 +60,10 @@
   const linkPdf = (href, titolo) => el("a", { class: "pdf", href, target: "_blank", rel: "noopener",
     "aria-label": titolo ? "Apri PDF: " + titolo : null, text: "PDF" });
 
-  // Bottoni del PDF: se esiste la versione firmata si offre solo quella, da scaricare direttamente
+  // Bottoni del PDF: se esiste la versione firmata si offre solo quella, aperta in una nuova scheda
   function bottoniPdf(d, titolo) {
     if (!d.firmato) return [linkPdf(d.file, titolo)];
-    return [
-      el("span", { class: "badge firmato", text: "firmato" }),
-      el("a", { class: "pdf", href: d.firmato, download: d.firmato.split("/").pop(),
-        "aria-label": titolo ? "Scarica PDF firmato: " + titolo : null, text: "PDF" }),
-    ];
+    return [el("span", { class: "badge firmato", text: "firmato" }), linkPdf(d.firmato, titolo)];
   }
 
   // Documento come card (nella Candidatura senza versione)
