@@ -12,7 +12,7 @@ La cartella in cui sta il file decide dove compare sul sito (maiuscole/minuscole
 
 ```
 verbali/esterni/AAAA-MM-GG_verbale-esterno-<azienda>.tex      -> Verbali esterni
-verbali/esterni/firmati/<stesso nome>-firmato.pdf             -> bottone "firmato" accanto al verbale
+verbali/esterni/firmati/<stesso nome>-firmato.pdf             -> il bottone del verbale scarica il PDF firmato
 verbali/interni/AAAA-MM-GG_verbale_interno_<n>_V1.0.tex       -> Verbali interni
 diari-di-bordo/AAAA-MM-GG_....pdf                             -> Diari di bordo
 qualsiasi altro .tex o .pdf                                   -> Documenti

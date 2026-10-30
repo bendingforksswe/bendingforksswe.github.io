@@ -27,13 +27,16 @@ jobs:
     steps:
       - name: Ultimo commit di documenti-swe
         id: sha
-        run: echo "sha=$(git ls-remote https://github.com/bendingforksswe/documenti-swe.git refs/heads/main | cut -f1)" >> "$GITHUB_OUTPUT"
+        run: |
+          sha=$(git ls-remote https://github.com/bendingforksswe/documenti-swe.git refs/heads/main | cut -f1)
+          if [ -z "$sha" ]; then echo "::error::Impossibile leggere l'ultimo commit di documenti-swe"; exit 1; fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Confronto con il commit pubblicato
         id: confronto
         run: |
           # Il controllo periodico ricompila solo se documenti-swe è cambiata; gli altri eventi ricompilano sempre
           if [ "${{ github.event_name }}" != "schedule" ]; then echo "serve=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          pubblicato=$(curl -fsSL https://bendingforksswe.github.io/versione.json | sed -n 's/.*"documenti": *"\([0-9a-f]*\)".*/\1/p' || true)
+          pubblicato=$(curl -fsSL "https://bendingforksswe.github.io/versione.json?t=$(date +%s)" | sed -n 's/.*"documenti": *"\([0-9a-f]*\)".*/\1/p' || true)
           echo "Pubblicato: ${pubblicato:-nessuno} · Ultimo: ${{ steps.sha.outputs.sha }}"
           [ "$pubblicato" = "${{ steps.sha.outputs.sha }}" ] && echo "serve=false" >> "$GITHUB_OUTPUT" || echo "serve=true" >> "$GITHUB_OUTPUT"
 
