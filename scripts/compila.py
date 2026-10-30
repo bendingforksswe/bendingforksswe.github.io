@@ -48,7 +48,7 @@ BUILD = RADICE / "_build"
 
 IGNORATE = {"template", "templates", "modelli", "assets", "_build"}
 FASI = {"candidatura", "rtb", "pb"}
-FIRMATO = re.compile(r"[-_ ]?firmato$", re.I)
+FIRMATO = re.compile(r"[-_ ]*(firmato|signed)$", re.I)
 
 
 def metadati(tex: Path) -> dict:
@@ -111,8 +111,10 @@ def classifica(rel: Path) -> tuple:
 
 
 def chiave(rel: Path) -> str:
-    """Nome senza "-firmato", per abbinare il PDF firmato al suo verbale."""
-    return FIRMATO.sub("", rel.stem).lower().replace("_", "-")
+    """Nome normalizzato per abbinare il PDF firmato al suo verbale: senza "-firmato"/" - signed",
+    senza prefisso "bendingforks-", con "_" e "-" equivalenti."""
+    nome = FIRMATO.sub("", rel.stem.strip()).lower().replace("_", "-")
+    return re.sub(r"^bending-?forks-+", "", nome)
 
 
 def voce(rel: Path, meta: dict) -> dict:
@@ -183,7 +185,8 @@ def main():
         else:
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(f, dest)
-            if FIRMATO.search(f.stem):
+            # firmato: qualsiasi PDF in una cartella firmati/, oppure con "firmato"/"signed" in fondo al nome
+            if FIRMATO.search(f.stem) or any(p.lower() == "firmati" for p in rel.parts[:-1]):
                 firmati[chiave(rel)] = "pdf/" + rel.as_posix()
             elif f.with_suffix(".tex").exists():
                 continue  # PDF compilato e versionato per sbaglio: vale quello generato dal .tex
@@ -194,9 +197,10 @@ def main():
         k = chiave(Path(d["nome"]))
         if k in firmati:
             d["firmato"] = firmati.pop(k)
-    for k, file in firmati.items():  # firmati senza sorgente: compaiono da soli
+    for k, file in firmati.items():  # firmati senza sorgente: compaiono da soli, una volta, come firmati
         d = voce(Path(file[4:]), {})
-        d["file"] = file
+        d["file"] = d["firmato"] = file
+        d["nome"] = FIRMATO.sub("", d["nome"].strip())
         documenti.append(d)
 
     shutil.rmtree(BUILD, ignore_errors=True)

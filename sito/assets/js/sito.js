@@ -190,7 +190,7 @@
   document.getElementById("piede-nome").textContent = `${S.gruppo.nome} · Gruppo ${S.gruppo.numero}`;
   const corso = document.getElementById("piede-corso");
   corso.textContent = S.gruppo.corso;
-  if (S.capitolato) corso.append(el("br"), `Capitolato ${S.capitolato.codice} · ${S.capitolato.nome} (${S.capitolato.proponente})`);
+  if (S.capitolato && S.capitolato.codice) corso.append(el("br"), `Capitolato ${S.capitolato.codice} · ${S.capitolato.nome} (${S.capitolato.proponente})`);
   const link = document.getElementById("piede-link");
   link.append(el("a", { href: "mailto:" + S.gruppo.email, text: S.gruppo.email }));
   if (S.gruppo.github) link.append(el("a", { href: S.gruppo.github, target: "_blank", rel: "noopener", text: "GitHub" }));
