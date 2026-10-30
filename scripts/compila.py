@@ -26,7 +26,10 @@ Metadati facoltativi in testa al .tex (righe di commento):
   %! con: Uranion          (solo verbali esterni)
 La versione si legge dalla riga "\\textbf{Versione} & x.y.z" della copertina.
 
-Uso: python3 scripts/compila.py [--solo-sito]
+Un documento che non compila viene saltato (errore nel log e nel riepilogo dell'Action) e il resto
+del sito si pubblica lo stesso; con --rigoroso lo script invece termina con errore.
+
+Uso: python3 scripts/compila.py [--solo-sito] [--rigoroso]
 """
 import json
 import os
@@ -78,7 +81,8 @@ def risorse() -> Path:
     return dest
 
 
-def compila(tex: Path, dest: Path) -> bool:
+def compila(tex: Path, dest: Path) -> str:
+    """Compila il .tex in dest; restituisce "" se va tutto bene, altrimenti l'errore di LaTeX."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     build = BUILD / tex.relative_to(DOCS).parent
     build.mkdir(parents=True, exist_ok=True)
@@ -87,11 +91,11 @@ def compila(tex: Path, dest: Path) -> bool:
     for _ in range(2):  # due passaggi per indice e riferimenti
         r = subprocess.run(cmd, cwd=tex.parent, env=env, capture_output=True, text=True, errors="replace")
         if r.returncode != 0:
-            print(f"::error file={tex.relative_to(DOCS).as_posix()}::compilazione fallita")
-            print("\n".join(r.stdout.splitlines()[-25:]))
-            return False
+            righe = r.stdout.splitlines()
+            print("\n".join(righe[-25:]))
+            return next((x.lstrip("! ").strip() for x in righe if x.startswith("!")), "compilazione fallita")
     shutil.copy2(build / (tex.stem + ".pdf"), dest)
-    return True
+    return ""
 
 
 def classifica(rel: Path) -> tuple:
@@ -154,7 +158,7 @@ def main():
     pagina.write_text(re.sub(r'((?:href|src)="assets/(?:css|js)/[^"?]+)"', lambda m: f'{m.group(1)}?v={stampo}"',
                              pagina.read_text(encoding="utf-8")), encoding="utf-8")
 
-    documenti, firmati, errori = [], {}, 0
+    documenti, firmati, errori = [], {}, []
     for f in sorted(DOCS.rglob("*")):
         rel = f.relative_to(DOCS)
         if not f.is_file() or f.suffix.lower() not in (".tex", ".pdf"):
@@ -170,8 +174,10 @@ def main():
                 print(f"::warning file={rel.as_posix()}::{meta['segnaposto']} segnaposto \\ph{{...}} ancora da compilare")
             if not solo_sito:
                 print(f"Compilo {rel.as_posix()}")
-                if not compila(f, dest):
-                    errori += 1
+                errore = compila(f, dest)
+                if errore:
+                    print(f"::error file={rel.as_posix()}::{errore}")
+                    errori.append((rel.as_posix(), errore))
                     continue
             documenti.append(voce(rel, meta))
         else:
@@ -198,8 +204,16 @@ def main():
     (OUT / "assets/js/documenti.js").write_text(js + json.dumps(documenti, ensure_ascii=False, indent=1) + ";\n", encoding="utf-8")
     versione = {"documenti": commit_documenti(), "generato": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
     (OUT / "versione.json").write_text(json.dumps(versione) + "\n", encoding="utf-8")
-    print(f"{len(documenti)} documenti, {errori} errori")
-    sys.exit(1 if errori else 0)
+    print(f"{len(documenti)} documenti, {len(errori)} errori")
+    # Un documento che non compila non blocca gli altri: il sito si pubblica comunque e
+    # l'errore compare nel riepilogo dell'Action (il documento resta "in preparazione" sul sito)
+    riepilogo = os.environ.get("GITHUB_STEP_SUMMARY")
+    if riepilogo:
+        with open(riepilogo, "a", encoding="utf-8") as r:
+            r.write(f"### {len(documenti)} documenti pubblicati, {len(errori)} non compilati\n\n")
+            r.writelines(f"- `{nome}`: {errore}\n" for nome, errore in errori)
+    if errori and "--rigoroso" in sys.argv:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,8 @@ La cartella in cui sta il file decide dove compare sul sito (maiuscole/minuscole
 verbali/esterni/AAAA-MM-GG_verbale-esterno-<azienda>.tex      -> Verbali esterni
 verbali/<esterni|interni>/firmati/<stesso nome>-firmato.pdf  -> il bottone del verbale scarica il PDF firmato
 verbali/interni/AAAA-MM-GG_verbale_interno_<n>_V1.0.tex       -> Verbali interni
-diari-di-bordo/AAAA-MM-GG_....pdf                             -> Diari di bordo
+candidatura/<nome>.tex                                        -> card della Candidatura
+diario-di-bordo/AAAA-MM-GG-diario-di-bordo.pdf                -> Diari di bordo (solo PDF; i .pptx vengono ignorati)
 qualsiasi altro .tex o .pdf                                   -> Documenti
 template/, modelli/, assets/                                  -> ignorate
 ```
@@ -29,7 +30,8 @@ template/, modelli/, assets/                                  -> ignorate
 - Metadati facoltativi in testa al `.tex`: `%! titolo: Valutazione dei capitolati`, `%! con: Uranion`.
 
 Nel log dell'Action compare un avviso per ogni documento con segnaposto `\ph{...}` ancora da compilare.
-Se un documento non compila, l'Action fallisce e il sito resta quello precedente.
+Se un documento non compila viene saltato (sul sito resta "in preparazione") e il resto si pubblica lo stesso:
+l'errore di LaTeX compare tra le annotazioni e nel riepilogo dell'Action.
 
 Dati del gruppo, capitolato, scadenze e documenti attesi per fase (mostrati "in preparazione" finché mancano)
 sono in `sito/assets/js/config.js`.

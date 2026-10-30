@@ -10,13 +10,13 @@ window.SITO = {
     corso: "Ingegneria del Software · A.A. 2026/27 · Università degli Studi di Padova",
   },
 
-  // Da compilare quando il capitolato è assegnato, es. { codice: "C3", nome: "Fossdot", proponente: "Uranion" }
-  capitolato: null,
+  capitolato: { codice: "C3", nome: "Fossdot", proponente: "Uranion" },
 
   // Fasi in ordine. Un documento senza cartella di fase va nella prima fase la cui scadenza
   // non è precedente alla sua data (o nella prima fase senza scadenza).
   // "attesi": documenti previsti per la fase; compaiono "in preparazione" finché non esiste
-  // un file il cui nome contiene "nome" (trattini, underscore e maiuscole indifferenti).
+  // un file il cui nome contiene "nome" (trattini, underscore e maiuscole indifferenti;
+  // più alternative separate da "|").
   fasi: [
     {
       id: "candidatura",
@@ -25,7 +25,7 @@ window.SITO = {
       attesi: [
         { nome: "lettera", titolo: "Lettera di presentazione" },
         { nome: "capitolati", titolo: "Valutazione dei capitolati" },
-        { nome: "preventivo", titolo: "Preventivo dei costi e assunzione degli impegni" },
+        { nome: "preventivo|impegni", titolo: "Preventivo dei costi e assunzione degli impegni" },
       ],
     },
     { id: "rtb", titolo: "RTB", attesi: [] },

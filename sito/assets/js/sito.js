@@ -124,7 +124,7 @@
     const corpo = [];
     const usati = new Set();
     const carte = (f.attesi || []).map((a) => {
-      const trovato = docs.filter((d) => piatto(d.nome).includes(piatto(a.nome))).sort(recenti)[0];
+      const trovato = docs.filter((d) => a.nome.split("|").some((n) => piatto(d.nome).includes(piatto(n)))).sort(recenti)[0];
       if (trovato) usati.add(trovato);
       return card(a.titolo, trovato || {});
     });
