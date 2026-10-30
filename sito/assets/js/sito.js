@@ -70,11 +70,11 @@
     ];
   }
 
-  // Documento come card
-  function card(titolo, d) {
+  // Documento come card (nella Candidatura senza versione)
+  function card(titolo, d, versione = true) {
     const piede = el("div", { class: "piede-doc" });
     if (d.file) {
-      if (d.versione) piede.append(el("span", { class: "meta", text: "v" + d.versione }));
+      if (versione && d.versione) piede.append(el("span", { class: "meta", text: "v" + d.versione }));
       // nelle card dei documenti niente etichetta "firmato": solo il PDF (la versione firmata, se c'è)
       piede.append(linkPdf(d.firmato || d.file, titolo));
     } else {
@@ -127,10 +127,10 @@
     const carte = (f.attesi || []).map((a) => {
       const trovato = docs.filter((d) => a.nome.split("|").some((n) => piatto(d.nome).includes(piatto(n)))).sort(recenti)[0];
       if (trovato) usati.add(trovato);
-      return card(a.titolo, trovato || {});
+      return card(a.titolo, trovato || {}, f.id !== "candidatura");
     });
     docs.filter((d) => !usati.has(d)).sort(recenti)
-      .forEach((d) => carte.push(card(d.titolo || daNome(d.nome), d)));
+      .forEach((d) => carte.push(card(d.titolo || daNome(d.nome), d, f.id !== "candidatura")));
     if (carte.length) corpo.push(el("div", { class: "griglia-doc" }, ...carte));
     if (est.length || int.length) {
       corpo.push(el("div", { class: "colonne" },
