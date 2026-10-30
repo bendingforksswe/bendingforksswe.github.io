@@ -10,7 +10,7 @@ window.SITO = {
     corso: "Ingegneria del Software · A.A. 2026/27 · Università degli Studi di Padova",
   },
 
-  capitolato: { codice: "C3", nome: "Fossdot", proponente: "Uranion" },
+  capitolato: {},
 
   // Fasi in ordine. Un documento senza cartella di fase va nella prima fase la cui scadenza
   // non è precedente alla sua data (o nella prima fase senza scadenza).
