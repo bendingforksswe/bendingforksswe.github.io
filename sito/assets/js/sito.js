@@ -75,7 +75,8 @@
     const piede = el("div", { class: "piede-doc" });
     if (d.file) {
       if (d.versione) piede.append(el("span", { class: "meta", text: "v" + d.versione }));
-      piede.append(...bottoniPdf(d, titolo));
+      // nelle card dei documenti niente etichetta "firmato": solo il PDF (la versione firmata, se c'è)
+      piede.append(linkPdf(d.firmato || d.file, titolo));
     } else {
       piede.append(el("span", { class: "badge prep", text: "in preparazione" }));
     }
