@@ -136,6 +136,13 @@ def main():
             shutil.rmtree(d)
     shutil.copytree(SITO, OUT)
     (OUT / ".nojekyll").touch()
+    # "?v=..." su CSS e JS: a ogni pubblicazione il browser scarica i file nuovi invece di quelli in cache
+    pagina = OUT / "index.html"
+    # (commit del sito + commit dei documenti, così cambia anche quando si aggiorna solo documenti-swe)
+    stampo = "-".join(x[:7] for x in (os.environ.get("GITHUB_SHA", ""), commit_documenti()) if x)
+    stampo = stampo or datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    pagina.write_text(re.sub(r'((?:href|src)="assets/(?:css|js)/[^"?]+)"', lambda m: f'{m.group(1)}?v={stampo}"',
+                             pagina.read_text(encoding="utf-8")), encoding="utf-8")
 
     documenti, firmati, errori = [], {}, 0
     for f in sorted(DOCS.rglob("*")):
