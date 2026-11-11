@@ -66,18 +66,15 @@
     return [el("span", { class: "badge firmato", text: "firmato" }), linkPdf(d.firmato, titolo)];
   }
 
-  // Documento come card (nella Candidatura senza versione)
+  // Documento come card: versione in alto, sotto solo il PDF se c'è, altrimenti "in preparazione"
+  // (nella Candidatura senza versione)
   function card(titolo, d, versione = true) {
-    const piede = el("div", { class: "piede-doc" });
-    if (d.file) {
-      if (versione && d.versione) piede.append(el("span", { class: "meta", text: "v" + d.versione }));
-      // nelle card dei documenti niente etichetta "firmato": solo il PDF (la versione firmata, se c'è)
-      piede.append(linkPdf(d.firmato || d.file, titolo));
-    } else {
-      piede.append(el("span", { class: "badge prep", text: "in preparazione" }));
-    }
-    return el("article", { class: "doc solleva" },
-      el("div", { class: "icona" }, iconaDoc()), el("h4", { text: titolo }), piede);
+    const testa = el("div", { class: "testa-doc" }, el("div", { class: "icona" }, iconaDoc()),
+      versione && d.file && d.versione ? el("span", { class: "meta", text: "v" + d.versione }) : null);
+    const piede = el("div", { class: "piede-doc" }, d.file
+      ? linkPdf(d.firmato || d.file, titolo)
+      : el("span", { class: "badge prep", text: "in preparazione" }));
+    return el("article", { class: "doc solleva" }, testa, el("h4", { text: titolo }), piede);
   }
 
   // Verbale o diario come riga
@@ -90,33 +87,56 @@
   }
 
   const vuoto = (testo) => el("div", { class: "vuoto" }, iconaDiario(), el("span", { text: testo }));
+  const iconaGiu = () => icona(16, "M6 9l6 6 6-6");
+
+  function intesta(occhiello, titolo, tag = "h2") {
+    return el("div", { class: "intesta" }, occhiello ? el("span", { class: "occhiello", text: occhiello }) : null, el(tag, { text: titolo }));
+  }
 
   function sezione(id, titolo, occhiello, ...corpo) {
     salti.append(el("a", { href: "#" + id, text: titolo }));
-    main.append(el("section", { id },
-      el("div", { class: "intesta" }, occhiello ? el("span", { class: "occhiello", text: occhiello }) : null, el("h2", { text: titolo })),
-      ...corpo));
+    main.append(el("section", { id }, intesta(occhiello, titolo), ...corpo));
   }
 
+  // Lista di verbali: si vedono i primi N, gli altri dietro "Mostra tutti"
+  const VISIBILI = S.verbaliVisibili || 5;
   function listaVerbali(voci, esterni) {
     const box = el("div", { class: "righe" });
-    if (!voci.length) box.append(el("div", { class: "vuoto", text: "Nessun verbale" }));
-    voci.sort(recenti).forEach((v) => {
+    if (!voci.length) return el("p", { class: "nessuno", text: "Nessun verbale in questa fase." });
+    const righe = voci.sort(recenti).map((v) => {
       const desc = v.titolo || (esterni
         ? v.con || maiuscole(daNome(v.nome.replace(/^.*verbale[-_]esterno[-_]?/i, "")))
         : daNome(v.nome));
-      box.append(riga(desc || v.nome, v));
+      return riga(desc || v.nome, v);
     });
-    return box;
+    righe.forEach((r, i) => { if (i >= VISIBILI) r.hidden = true; box.append(r); });
+    if (righe.length <= VISIBILI) return box;
+    const testo = el("span", { text: `Mostra tutti (${righe.length})` });
+    const bottone = el("button", { class: "espandi", type: "button", "aria-expanded": "false" }, testo, iconaGiu());
+    bottone.addEventListener("click", () => {
+      const aperto = bottone.getAttribute("aria-expanded") !== "true";
+      bottone.setAttribute("aria-expanded", String(aperto));
+      testo.textContent = aperto ? "Mostra meno" : `Mostra tutti (${righe.length})`;
+      righe.forEach((r, i) => { if (i >= VISIBILI) r.hidden = !aperto; });
+    });
+    return el("div", { class: "blocco-lista" }, box, bottone);
   }
 
-  // Fasi: documenti (attesi + presenti) e verbali della fase
-  for (const f of S.fasi) {
+  // Stato delle fasi: prima della fase in corso sono completate, dopo sono le prossime
+  const NOMI_FASE = { rtb: "Requirements and Technology Baseline", pb: "Product Baseline" };
+  const iCorrente = Math.max(0, S.fasi.findIndex((f) => !f.scadenza || f.scadenza >= oggi));
+  const statoDi = (i) => (i < iCorrente ? "completata" : i === iCorrente ? "in corso" : "prossima");
+  const notaDi = (f, i) => i < iCorrente && f.scadenza ? "Consegnata il " + dataLunga(f.scadenza)
+    : NOMI_FASE[f.id] || (f.scadenza ? "Consegna il " + dataLunga(f.scadenza) : "");
+
+  // Documentazione: una scheda per fase, con documenti attesi/presenti e verbali
+  const schede = el("div", { class: "schede", role: "tablist", "aria-label": "Fasi del progetto" });
+  const pannelli = [];
+  S.fasi.forEach((f, i) => {
     const diFase = D.filter((d) => d.sezione !== "diari-di-bordo" && faseDi(d) === f.id);
     const docs = diFase.filter((d) => d.sezione === "documenti");
     const est = diFase.filter((d) => d.sezione === "verbali-esterni");
     const int = diFase.filter((d) => d.sezione === "verbali-interni");
-    if (!docs.length && !est.length && !int.length && !(f.attesi || []).length) continue;
 
     const corpo = [];
     const usati = new Set();
@@ -133,20 +153,72 @@
         el("div", { class: "blocco" }, el("h3", { text: "Verbali esterni" }), listaVerbali(est, true)),
         el("div", { class: "blocco" }, el("h3", { text: "Verbali interni" }), listaVerbali(int, false))));
     }
-    const occhiello = "Documenti" + (f.scadenza ? " · consegna " + dataLunga(f.scadenza) : "");
-    sezione(f.id, f.titolo, occhiello, ...corpo);
-  }
+    if (!corpo.length) corpo.push(vuoto(i > iCorrente
+      ? "Questa fase non è ancora iniziata. Documenti e verbali compariranno qui."
+      : "Nessun documento in questa fase."));
 
-  // Diari di bordo
+    const stato = statoDi(i);
+    const scheda = el("button", { class: "scheda", type: "button", role: "tab", id: "scheda-" + f.id,
+      "aria-controls": "fase-" + f.id, "aria-selected": "false", tabindex: "-1" },
+      el("span", { class: "scheda-riga" }, el("span", { class: "scheda-titolo", text: f.titolo }),
+        el("span", { class: "stato " + stato.replace(" ", "-"), text: stato })),
+      el("span", { class: "scheda-nota", text: notaDi(f, i) }));
+    schede.append(scheda);
+    pannelli.push(el("div", { class: "pannello", role: "tabpanel", id: "fase-" + f.id, "aria-labelledby": "scheda-" + f.id, hidden: "" }, ...corpo));
+  });
+
+  const tutteSchede = [...schede.children];
+  function apri(i, fuoco) {
+    tutteSchede.forEach((s, j) => {
+      const sel = i === j;
+      s.setAttribute("aria-selected", String(sel));
+      s.tabIndex = sel ? 0 : -1;
+      pannelli[j].hidden = !sel;
+    });
+    if (fuoco) tutteSchede[i].focus();
+  }
+  tutteSchede.forEach((s, i) => {
+    s.addEventListener("click", () => {
+      apri(i);
+      history.replaceState(null, "", "#" + S.fasi[i].id);
+    });
+    s.addEventListener("keydown", (e) => {
+      const n = tutteSchede.length;
+      const dove = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+      if (dove === undefined) return;
+      e.preventDefault();
+      apri(dove, true);
+    });
+  });
+  // Scheda iniziale: quella nell'indirizzo (es. #candidatura), altrimenti la fase in corso
+  const daHash = S.fasi.findIndex((f) => "#" + f.id === location.hash);
+  apri(daHash >= 0 ? daHash : iCorrente);
+
+  const cap = S.capitolato && S.capitolato.nome
+    ? ` · Capitolato ${[S.capitolato.codice, S.capitolato.nome].filter(Boolean).join(" ")}` : "";
+  salti.append(el("a", { href: "#documenti", text: "Documenti" }));
+  main.append(el("section", { id: "documenti" }, intesta(`Gruppo ${S.gruppo.numero}${cap}`, "Documentazione", "h1"), schede, ...pannelli));
+  if (daHash >= 0) requestAnimationFrame(() => document.getElementById("documenti").scrollIntoView());
+
+  // Diari di bordo: card piccole, tutte uguali
   const voci = D.filter((d) => d.sezione === "diari-di-bordo").sort(recenti);
   const diari = voci.length
-    ? el("div", { class: "righe" }, ...voci.map((d) => riga(d.titolo || (d.data ? "Diario del " + dataLunga(d.data) : daNome(d.nome)), d)))
+    ? el("div", { class: "diari" }, ...voci.map((d) => {
+      const data = d.data ? new Date(d.data + "T00:00:00") : null;
+      const ok = data && !isNaN(data);
+      const giorno = ok ? String(data.getDate()) : (d.titolo || daNome(d.nome));
+      const mese = ok ? data.toLocaleDateString("it-IT", { month: "long", year: "numeric" }) : "";
+      return el("a", { class: "diario solleva", href: d.file, target: "_blank", rel: "noopener",
+        "aria-label": "Diario di bordo" + (ok ? " del " + dataLunga(d.data) : "") + ", PDF" },
+        el("span", { class: "diario-giorno", text: giorno }), mese ? el("span", { class: "diario-mese", text: mese }) : null,
+        el("span", { class: "diario-apri", text: "Apri il PDF" }));
+    }))
     : vuoto("Nessun diario di bordo per ora. Il primo comparirà qui.");
   sezione("diari", "Diari di bordo", "Giornale di progetto", diari);
 
   // Team
   const team = el("div", { class: "team" }, ...S.membri.map((m) =>
-    el("div", { class: "membro solleva" },
+    el("div", { class: "membro" },
       el("div", { class: "avatar", "aria-hidden": "true", text: iniziali(m.nome) }),
       el("div", {}, el("span", { class: "nome", text: m.nome }), el("span", { class: "meta", text: m.matricola })))));
   sezione("team", "Team", "Le persone", team);

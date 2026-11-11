@@ -10,7 +10,7 @@ window.SITO = {
     corso: "Ingegneria del Software · A.A. 2026/27 · Università degli Studi di Padova",
   },
 
-  capitolato: {},
+  capitolato: { codice: "C3", nome: "FOSSDOT" },
 
   // Fasi in ordine. Un documento senza cartella di fase va nella prima fase la cui scadenza
   // non è precedente alla sua data (o nella prima fase senza scadenza).
@@ -28,9 +28,22 @@ window.SITO = {
         { nome: "preventivo|impegni", titolo: "Preventivo dei costi e assunzione degli impegni" },
       ],
     },
-    { id: "rtb", titolo: "RTB", attesi: [] },
+    {
+      id: "rtb",
+      titolo: "RTB",
+      attesi: [
+        { nome: "norme", titolo: "Norme di progetto" },
+        { nome: "analisi", titolo: "Analisi dei requisiti" },
+        { nome: "piano di progetto", titolo: "Piano di progetto" },
+        { nome: "piano di qualifica", titolo: "Piano di qualifica" },
+        { nome: "glossario", titolo: "Glossario" },
+      ],
+    },
     { id: "pb", titolo: "PB", attesi: [] },
   ],
+
+  // Verbali mostrati per colonna prima del bottone "Mostra tutti"
+  verbaliVisibili: 5,
 
   membri: [
     { nome: "Marco Beltrame", matricola: "2111021" },
